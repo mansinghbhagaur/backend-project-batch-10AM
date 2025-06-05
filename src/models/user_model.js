@@ -34,9 +34,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
-
-userScheme.pre("save", async function (next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
 });
@@ -71,3 +69,7 @@ userSchema.methods.generateRefreshToken = async function () {
     }
   );
 };
+
+const User = mongoose.model("User", userSchema);
+
+module.exports = User;
