@@ -9,8 +9,8 @@ const generateAccessAndRefreshToken = async (userId) => {
     const user = await User.findById(userId);
     if (!user) throw new ApiError("User not found", 404);
 
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
 
     //  adding user refresh token to the database
     user.refreshToken = refreshToken;
@@ -123,7 +123,79 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
+// logout controller
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    { $unset: { refreshToken: 1 } },
+    { new: true }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged Out successfully"));
+});
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, {}, "No refresh token provided"));
+  }
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.SECRET_KEY
+    );
+
+    // user get
+    const user = await User.findById(decodedToken._id);
+
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, "Refresh Token is expired or used");
+    }
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+      user._id
+    );
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          "Access Token generated successfully"
+        )
+      );
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 module.exports = {
   register,
   loginUser,
+  logoutUser,
 };
