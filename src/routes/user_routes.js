@@ -6,10 +6,12 @@ const {
   register,
   loginUser,
   logoutUser,
+  refreshAccessToken,
 } = require("../controllers/user_controller.js");
 
 router.route("/register").post(register);
 router.route("/login").post(loginUser);
 router.route("/logout").post(verifyJwt, logoutUser);
+router.route("/refresh-token").post(refreshAccessToken);
 
 module.exports = router;

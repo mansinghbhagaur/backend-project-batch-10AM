@@ -155,7 +155,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   try {
     const decodedToken = jwt.verify(
       incomingRefreshToken,
-      process.env.SECRET_KEY
+      process.env.REFRESH_TOKEN_KEY
     );
 
     // user get
@@ -185,12 +185,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { accessToken, refreshToken: newRefreshToken },
+          { accessToken, refreshToken },
           "Access Token generated successfully"
         )
       );
   } catch (err) {
-    console.log(err);
+    console.log(err, "error hi ayega na galat karoge to :)");
   }
 });
 
@@ -198,4 +198,5 @@ module.exports = {
   register,
   loginUser,
   logoutUser,
+  refreshAccessToken,
 };
