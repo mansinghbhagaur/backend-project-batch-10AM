@@ -8,8 +8,9 @@ const {
   logoutUser,
   refreshAccessToken,
 } = require("../controllers/user_controller.js");
+const upload = require("../middlewares/multer_middlewar.js");
 
-router.route("/register").post(register);
+router.route("/register").post(upload.single("image"), register);
 router.route("/login").post(loginUser);
 router.route("/logout").post(verifyJwt, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);

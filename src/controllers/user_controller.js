@@ -26,6 +26,8 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const register = asyncHandler(async (req, res) => {
   const { username, fullname, email, password } = req.body;
+  const image = req.file;
+  console.log(image, "==========");
 
   if (!username === "") {
     throw res.json(
@@ -57,6 +59,7 @@ const register = asyncHandler(async (req, res) => {
     username,
     fullname,
     email,
+    avatar: image.originalname,
     password,
   });
 
