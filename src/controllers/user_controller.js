@@ -3,6 +3,7 @@ const { ApiError } = require("../utils/ApiError");
 const { ApiResponse } = require("../utils/ApiResponse");
 const User = require("../models/user_model");
 const jwt = require("jsonwebtoken");
+const uploadOnCloudinary = require("../utils/cloudinary");
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -26,8 +27,6 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const register = asyncHandler(async (req, res) => {
   const { username, fullname, email, password } = req.body;
-  const image = req.file;
-  console.log(image, "==========");
 
   if (!username === "") {
     throw res.json(
@@ -55,11 +54,32 @@ const register = asyncHandler(async (req, res) => {
     );
   }
 
+  // Check avatar image
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar is required");
+  }
+
+  console.log(avatarLocalPath, "path=============");
+
+  // Upload to Cloudinary
+  const avatarUploadResponse = await uploadOnCloudinary(avatarLocalPath);
+  console.log(avatarUploadResponse, "response==============");
+
+  if (!avatarUploadResponse || !avatarUploadResponse.url) {
+    throw new ApiError(500, "Failed to upload avatar to Cloudinary");
+  }
+
+  // Successfully uploaded
+  const avatarUrl = avatarUploadResponse.url;
+  console.log(avatarUrl, "url");
+
   const user = await User.create({
     username,
     fullname,
     email,
-    avatar: image.originalname,
+    avatar: avatarUrl,
     password,
   });
 

@@ -1,13 +1,16 @@
 const multer = require("multer");
+const path = require("path");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "./public/temp");
   },
   filename: function (req, file, cb) {
-    //     const uniqueSuffix = Date.now() + "-" + Math.floor(Math.random() * 100000);
-    //     cb(null, file.originalname + "-" + uniqueSuffix);
-    cb(null, file.originalname);
+    // Use unique filename to avoid overwrite
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e5);
+    const ext = path.extname(file.originalname);
+    const base = path.basename(file.originalname, ext);
+    cb(null, base + "-" + uniqueSuffix + ext);
   },
 });
 
